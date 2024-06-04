@@ -1,18 +1,18 @@
 package utils
 
 import (
-	"context"
-	"net/http"
-	"os"
-	"strings"
-	"ticketing-system/models"
-	"time"
-	"github.com/dgrijalva/jwt-go"
+    "context"
+    "net/http"
+    "strings"
+    "log"
+    "github.com/dgrijalva/jwt-go"
+    "ticketing-system/models"
+    "os"
+    "time"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
-// Define a new type for context keys
 type ContextKey string
 
 const (
@@ -59,6 +59,32 @@ func ValidateJWT(tokenStr string) (*Claims, error) {
     return claims, nil
 }
 
+func AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        authHeader := r.Header.Get("Authorization")
+        if authHeader == "" {
+            http.Error(w, "Missing token", http.StatusUnauthorized)
+            return
+        }
+
+        tokenString := strings.Split(authHeader, "Bearer ")[1]
+        claims := &Claims{}
+        token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+            return jwtKey, nil
+        })
+
+        if err != nil || !token.Valid {
+            http.Error(w, "Invalid token", http.StatusUnauthorized)
+            return
+        }
+
+        log.Printf("User ID from token: %d\n", claims.UserID)
+
+        ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
 func AdminMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         authHeader := r.Header.Get("Authorization")
@@ -80,30 +106,6 @@ func AdminMiddleware(next http.Handler) http.Handler {
 
         if claims.Role != "admin" {
             http.Error(w, "Forbidden", http.StatusForbidden)
-            return
-        }
-
-        ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-
-func AuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        authHeader := r.Header.Get("Authorization")
-        if authHeader == "" {
-            http.Error(w, "Missing token", http.StatusUnauthorized)
-            return
-        }
-
-        tokenString := strings.Split(authHeader, "Bearer ")[1]
-        claims := &Claims{}
-        token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-            return jwtKey, nil
-        })
-
-        if err != nil || !token.Valid {
-            http.Error(w, "Invalid token", http.StatusUnauthorized)
             return
         }
 

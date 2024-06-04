@@ -9,7 +9,7 @@ import (
 func SetupRouter() *mux.Router {
     router := mux.NewRouter()
     SetupUserRoutes(router)
-    SetupTicketRoutes(router)
+    SetupEventRoutes(router)
     SetupNotificationRoutes(router)
     return router
 }
@@ -22,23 +22,26 @@ func SetupUserRoutes(router *mux.Router) {
     userRouter.Use(utils.AuthMiddleware)
     userRouter.HandleFunc("/profile", controllers.GetUserProfile).Methods("GET")
     userRouter.HandleFunc("/profile", controllers.UpdateUserProfile).Methods("PUT")
+    userRouter.HandleFunc("/bookings", controllers.GetUserBookings).Methods("GET")
 
     adminRouter := router.PathPrefix("/admin").Subrouter()
     adminRouter.Use(utils.AdminMiddleware)
     adminRouter.HandleFunc("/users", controllers.GetUsers).Methods("GET")
 }
 
-func SetupTicketRoutes(router *mux.Router) {
-    // Rute untuk mendapatkan daftar tiket dan melihat detail tiket
-    router.HandleFunc("/tickets", controllers.GetTickets).Methods("GET")
-    router.HandleFunc("/tickets/{id}", controllers.GetTicket).Methods("GET")
+func SetupEventRoutes(router *mux.Router) {
+    router.HandleFunc("/events", controllers.GetEvents).Methods("GET")
+    router.HandleFunc("/events/{id}", controllers.GetEvent).Methods("GET")
 
-    // Rute untuk menambah, mengedit, dan menghapus tiket hanya tersedia untuk admin
     adminRouter := router.PathPrefix("/admin").Subrouter()
     adminRouter.Use(utils.AdminMiddleware)
-    adminRouter.HandleFunc("/tickets", controllers.CreateTicket).Methods("POST")
-    adminRouter.HandleFunc("/tickets/{id}", controllers.UpdateTicket).Methods("PUT")
-    adminRouter.HandleFunc("/tickets/{id}", controllers.DeleteTicket).Methods("DELETE")
+    adminRouter.HandleFunc("/events", controllers.CreateEvent).Methods("POST")
+    adminRouter.HandleFunc("/events/{id}", controllers.UpdateEvent).Methods("PUT")
+    adminRouter.HandleFunc("/events/{id}", controllers.DeleteEvent).Methods("DELETE")
+
+    eventRouter := router.PathPrefix("/events").Subrouter()
+    eventRouter.Use(utils.AuthMiddleware)
+    eventRouter.HandleFunc("/book", controllers.BookTickets).Methods("POST")
 }
 
 func SetupNotificationRoutes(router *mux.Router) {

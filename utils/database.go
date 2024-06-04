@@ -32,7 +32,7 @@ func init() {
         log.Fatal("Failed to connect to database!")
     }
 
-    DB.AutoMigrate(&models.User{}, &models.Ticket{}, &models.Notification{})
+    DB.AutoMigrate(&models.User{}, &models.Event{}, &models.Booking{}, &models.Notification{})
 
     createAdminIfNotExists()
 }

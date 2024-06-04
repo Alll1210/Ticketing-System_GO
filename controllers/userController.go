@@ -60,7 +60,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserProfile(w http.ResponseWriter, r *http.Request) {
-    userID := r.Context().Value(utils.ContextKeyUserID).(uint)
+    userID, ok := r.Context().Value(utils.ContextKeyUserID).(uint)
+    if !ok {
+        http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+        return
+    }
     var user models.User
     if err := utils.DB.First(&user, userID).Error; err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -70,7 +74,11 @@ func GetUserProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
-    userID := r.Context().Value(utils.ContextKeyUserID).(uint)
+    userID, ok := r.Context().Value(utils.ContextKeyUserID).(uint)
+    if !ok {
+        http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+        return
+    }
     var user models.User
     if err := utils.DB.First(&user, userID).Error; err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)

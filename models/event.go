@@ -1,8 +1,10 @@
 package models
 
-type Ticket struct {
+type Event struct {
     ID          uint   `json:"id" gorm:"primary_key"`
     Title       string `json:"title"`
     Description string `json:"description"`
-    Status      string `json:"status"`
+    Date        string `json:"date"`
+    Location    string `json:"location"`
+    Tickets     uint   `json:"-"`
 }
