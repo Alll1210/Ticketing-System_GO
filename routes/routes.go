@@ -22,6 +22,10 @@ func SetupUserRoutes(router *mux.Router) {
     userRouter.Use(utils.AuthMiddleware)
     userRouter.HandleFunc("/profile", controllers.GetUserProfile).Methods("GET")
     userRouter.HandleFunc("/profile", controllers.UpdateUserProfile).Methods("PUT")
+
+    adminRouter := router.PathPrefix("/admin").Subrouter()
+    adminRouter.Use(utils.AdminMiddleware)
+    adminRouter.HandleFunc("/users", controllers.GetUsers).Methods("GET")
 }
 
 func SetupTicketRoutes(router *mux.Router) {

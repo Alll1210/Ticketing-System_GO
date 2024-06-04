@@ -105,3 +105,12 @@ func UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
     json.NewEncoder(w).Encode(user)
 }
+
+func GetUsers(w http.ResponseWriter, r *http.Request) {
+    var users []models.User
+    if err := utils.DB.Find(&users).Error; err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(users)
+}

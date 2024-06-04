@@ -1,13 +1,13 @@
 package utils
 
 import (
-    "context"
-    "net/http"
-    "strings"
-    "github.com/dgrijalva/jwt-go"
-    "ticketing-system/models"
-    "time"
-    "os"
+	"context"
+	"net/http"
+	"os"
+	"strings"
+	"ticketing-system/models"
+	"time"
+	"github.com/dgrijalva/jwt-go"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
