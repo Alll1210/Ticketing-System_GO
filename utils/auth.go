@@ -1,15 +1,23 @@
 package utils
 
 import (
-	"net/http"
-	"os"
-	"strings"
-	"ticketing-system/models"
-	"time"
-	"github.com/dgrijalva/jwt-go"
+    "context"
+    "net/http"
+    "strings"
+    "github.com/dgrijalva/jwt-go"
+    "ticketing-system/models"
+    "time"
+    "os"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
+
+// Define a new type for context keys
+type ContextKey string
+
+const (
+    ContextKeyUserID ContextKey = "userID"
+)
 
 type Claims struct {
     UserID uint   `json:"user_id"`
@@ -75,6 +83,31 @@ func AdminMiddleware(next http.Handler) http.Handler {
             return
         }
 
-        next.ServeHTTP(w, r)
+        ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        authHeader := r.Header.Get("Authorization")
+        if authHeader == "" {
+            http.Error(w, "Missing token", http.StatusUnauthorized)
+            return
+        }
+
+        tokenString := strings.Split(authHeader, "Bearer ")[1]
+        claims := &Claims{}
+        token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+            return jwtKey, nil
+        })
+
+        if err != nil || !token.Valid {
+            http.Error(w, "Invalid token", http.StatusUnauthorized)
+            return
+        }
+
+        ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
+        next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
