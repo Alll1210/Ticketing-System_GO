@@ -19,7 +19,7 @@ func SetupUserRoutes(router *mux.Router) {
 }
 
 func SetupTicketRoutes(router *mux.Router) {
-    // Rute untuk mendapatkan tiket tersedia untuk semua pengguna
+    // Rute untuk mendapatkan daftar tiket dan melihat detail tiket
     router.HandleFunc("/tickets", controllers.GetTickets).Methods("GET")
     router.HandleFunc("/tickets/{id}", controllers.GetTicket).Methods("GET")
 
