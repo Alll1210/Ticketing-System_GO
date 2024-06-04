@@ -1,10 +1,12 @@
 package utils
 
 import (
-    "os"
-    "time"
-    "ticketing-system/models"
-    "github.com/dgrijalva/jwt-go"
+	"net/http"
+	"os"
+	"strings"
+	"ticketing-system/models"
+	"time"
+	"github.com/dgrijalva/jwt-go"
 )
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
@@ -47,4 +49,32 @@ func ValidateJWT(tokenStr string) (*Claims, error) {
     }
 
     return claims, nil
+}
+
+func AdminMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        authHeader := r.Header.Get("Authorization")
+        if authHeader == "" {
+            http.Error(w, "Missing token", http.StatusUnauthorized)
+            return
+        }
+
+        tokenString := strings.Split(authHeader, "Bearer ")[1]
+        claims := &Claims{}
+        token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+            return jwtKey, nil
+        })
+
+        if err != nil || !token.Valid {
+            http.Error(w, "Invalid token", http.StatusUnauthorized)
+            return
+        }
+
+        if claims.Role != "admin" {
+            http.Error(w, "Forbidden", http.StatusForbidden)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
 }
